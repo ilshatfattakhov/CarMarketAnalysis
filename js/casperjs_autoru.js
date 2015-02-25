@@ -28,29 +28,13 @@ casper.on('remote.message', function(message) {
     this.echo('remote console message: ' + message);
 });
 
-    casper.start(baseURL, function() {
-        console.log(baseURL)
-        pages = this.evaluate(function() {
-            var l = [];
-
-            //grab all model's urls from vendor page
-            $(".showcase-modify-title-link").each(function(i, s) {
-                //console.log(s+' '+i);
-                l.push(s.href);
-            })
-            //this.echo(pages)
-            return l;
-        });
-
-            models = pages;
-    });
 
 
 // Capture links
 capture = function() {
     //links.push(baseURL);
     for (var i = 0; i <= models.length-1; i++) {
-        //this.echo('Opening '+models[i])
+        this.echo(i+'. '+Date()+' Opening '+models[i])
         casper.open(models[i]).then(function() {
             pages = this.evaluate(function() {
                 var totalItems = $('li.tabs-v4-i_active sup.tabs-v4-l_counter').text();
@@ -65,21 +49,23 @@ capture = function() {
                 };
 
             });
-            //this.echo(pages['title']);
-            //this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
+            this.echo(Date()+' '+pages['title']);
+            this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
             numberOfPages = pages['pages'];
             //links.push(baseURL);
             var l = []
-            var n 
             n = pages['car']
-            for (var i = 1; i <= numberOfPages; i++) {
-                l.push(models[i]+'&p='+i );
+            for (var k = 1; k <= numberOfPages; k++) {
+                l.push(models[i]+'&p='+k );
             };
-            //this.echo(n);
+            this.echo(n);
             models.n = l;
 
-
+        this.wait(1000, function() {
+            this.echo("I've waited for a second.");
+        });
         })
+
     }
 
 //this.echo(links);
@@ -90,11 +76,14 @@ this.then(selectLink);
 
 selectLink = function() {
     this.log(models);
+
+    /*
     if (currentLink < numberOfPages) {
         this.then(grabContent);
     } else {
         console.log('finish');
     }
+    */
 };
 
 
@@ -157,6 +146,24 @@ buildPage = function() {
     currentLink++;
     this.then(selectLink);
 };
+
+
+casper.start(baseURL, function() {
+    this.echo('Start URL '+baseURL)
+    pages = this.evaluate(function() {
+        var l = [];
+
+        //grab all model's urls from vendor page
+        $(".showcase-modify-title-link").each(function(i, s) {
+            //console.log(s+' '+i);
+            l.push(s.href);
+        })
+        //this.echo(pages)
+        return l;
+    });
+
+        models = pages;
+});
 
 casper.then(capture);
 
