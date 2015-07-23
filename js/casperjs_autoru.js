@@ -1,4 +1,3 @@
-
 var system = require('system');
 var args = system.args; 
 var casper = require('casper').create({
@@ -18,58 +17,82 @@ var parsedItems = '';
 var buildPage, capture, selectLink, grabContent, writeContent;
 var fs = require('fs');
 var filename = 'data/'+system.args[4]+'/'+'test.csv';
-var baseURL = 'http://auto.ru/cars/'+system.args[4]+'/used/?sort%5Bset_date%5D=desc';
+var baseURL = 'http://auto.ru/cars/'+system.args[4]+'/used/?sort%5Bset_date%5D=desc&output_type=list';
 
 var postContent;
 var models = [];
-var links = {}
+var links = []
 
 casper.on('remote.message', function(message) {
     this.echo('remote console message: ' + message);
 });
 
 
-
 // Capture links
-capture = function() {
+capture_links = function() {
     //links.push(baseURL);
-    for (var i = 0; i <= models.length-1; i++) {
-        this.echo(i+'. '+Date()+' Opening '+models[i])
-        casper.open(models[i]).then(function() {
+    casper.each(models, function(self, link){
+        self.thenOpen(link, function(){
             pages = this.evaluate(function() {
                 var totalItems = $('li.tabs-v4-i_active sup.tabs-v4-l_counter').text();
                 var itemsOnPage = $('.sales-list tbody tr').length;
                 var title = $('.seo-title').text();
-                var c = $('.mmm-folder option:selected').text();
+                var c = $('#sale-data-attributes').data('model');
                 return {
                     'items': totalItems,
                     'pages': Math.ceil(totalItems / itemsOnPage),
                     'title': title,
                     'car' : c
                 };
-
             });
-            this.echo(Date()+' '+pages['title']);
+            this.echo(pages['car']);
             this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
-            numberOfPages = pages['pages'];
-            //links.push(baseURL);
             var l = []
             n = pages['car']
+            numberOfPages = pages['pages']
             for (var k = 1; k <= numberOfPages; k++) {
-                l.push(models[i]+'&p='+k );
+                l.push(link+'&p='+k );
             };
-            this.echo(n);
-            models.n = l;
-
-        this.wait(1000, function() {
-            this.echo("I've waited for a second.");
-        });
+            links.push(l)
         })
+    })
+    // for (var i = 0; i <= models.length-1; i++) {
+        
 
-    }
+    //     this.echo(i+'. '+Date()+' Opening '+models[i])
+    //     casper.open(models[i]).then(function() {
+    //         pages = this.evaluate(function() {
+    //             var totalItems = $('li.tabs-v4-i_active sup.tabs-v4-l_counter').text();
+    //             var itemsOnPage = $('.sales-list tbody tr').length;
+    //             var title = $('.seo-title').text();
+    //             var c = $('#sale-data-attributes').data('model');
+    //             return {
+    //                 'items': totalItems,
+    //                 'pages': Math.ceil(totalItems / itemsOnPage) + 1,
+    //                 'title': title,
+    //                 'car' : c
+    //             };
+    //         });
+    //         //this.echo(Date()+' '+pages['title']);
+    //         //this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
+    //         numberOfPages = pages['pages'];
+    //         //links.push(baseURL);
+    //         var l = []
+    //         n = pages['car']
+    //         for (var k = 1; k <= numberOfPages; k++) {
+    //             l.push(models[i]+'&p='+k );
+    //         };
+    //         models.n = l;
 
-//this.echo(links);
-this.then(selectLink);
+    //     // this.wait(1000, function() {
+    //     //     this.echo("I've waited for a second.");
+    //     // });
+    //     })
+
+    // }
+
+this.echo(links);
+//this.then(selectLink);
 };
 
 
@@ -77,13 +100,12 @@ this.then(selectLink);
 selectLink = function() {
     this.log(models);
 
-    /*
+    
     if (currentLink < numberOfPages) {
         this.then(grabContent);
     } else {
         console.log('finish');
     }
-    */
 };
 
 
@@ -140,7 +162,7 @@ grabContent = function() {
 };
  
 buildPage = function() {
-    //this.echo('writing to ' + filename);
+    this.echo('writing to ' + filename);
     fs.write(filename, postContent, 'a');
  
     currentLink++;
@@ -152,9 +174,8 @@ casper.start(baseURL, function() {
     this.echo('Start URL '+baseURL)
     pages = this.evaluate(function() {
         var l = [];
-
         //grab all model's urls from vendor page
-        $(".showcase-modify-title-link").each(function(i, s) {
+        $(".fast-mmm-list .fast-mmm-item a").each(function(i, s) {
             //console.log(s+' '+i);
             l.push(s.href);
         })
@@ -165,6 +186,8 @@ casper.start(baseURL, function() {
         models = pages;
 });
 
-casper.then(capture);
+casper.then(capture_links);
 
 casper.run();
+
+
