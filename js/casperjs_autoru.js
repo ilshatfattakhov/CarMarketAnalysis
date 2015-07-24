@@ -48,48 +48,16 @@ capture_links = function() {
             this.echo(pages['car']);
             this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
             var l = []
-            n = pages['car']
             numberOfPages = pages['pages']
             for (var k = 1; k <= numberOfPages; k++) {
                 l.push(link+'&p='+k );
             };
-            links.push(l)
+            this.echo(l)
+            links.concat(l)
         })
+
+    
     })
-    // for (var i = 0; i <= models.length-1; i++) {
-        
-
-    //     this.echo(i+'. '+Date()+' Opening '+models[i])
-    //     casper.open(models[i]).then(function() {
-    //         pages = this.evaluate(function() {
-    //             var totalItems = $('li.tabs-v4-i_active sup.tabs-v4-l_counter').text();
-    //             var itemsOnPage = $('.sales-list tbody tr').length;
-    //             var title = $('.seo-title').text();
-    //             var c = $('#sale-data-attributes').data('model');
-    //             return {
-    //                 'items': totalItems,
-    //                 'pages': Math.ceil(totalItems / itemsOnPage) + 1,
-    //                 'title': title,
-    //                 'car' : c
-    //             };
-    //         });
-    //         //this.echo(Date()+' '+pages['title']);
-    //         //this.echo(pages['items'] + " items on " + pages['pages'] + " pages found");
-    //         numberOfPages = pages['pages'];
-    //         //links.push(baseURL);
-    //         var l = []
-    //         n = pages['car']
-    //         for (var k = 1; k <= numberOfPages; k++) {
-    //             l.push(models[i]+'&p='+k );
-    //         };
-    //         models.n = l;
-
-    //     // this.wait(1000, function() {
-    //     //     this.echo("I've waited for a second.");
-    //     // });
-    //     })
-
-    // }
 
 this.echo(links);
 //this.then(selectLink);
@@ -171,22 +139,24 @@ buildPage = function() {
 
 
 casper.start(baseURL, function() {
-    this.echo('Start URL '+baseURL)
+    this.echo('Start URL ' + baseURL)
     pages = this.evaluate(function() {
         var l = [];
-        //grab all model's urls from vendor page
-        $(".fast-mmm-list .fast-mmm-item a").each(function(i, s) {
-            //console.log(s+' '+i);
-            l.push(s.href);
-        })
-        //this.echo(pages)
+        //grab all model's urls from vendor page with active ads
+        $(".fast-mmm-list .fast-mmm-item").filter(function(index) {
+                return $("sup", this).length === 1;
+            }).find("a").each(function(i, s) {
+                this.echo(s.href)
+                l.push(s.href);
+            })
+            //this.echo(pages)
         return l;
     });
 
-        models = pages;
+    models = pages;
 });
 
-casper.then(capture_links);
+//casper.then(capture_links);
 
 casper.run();
 
